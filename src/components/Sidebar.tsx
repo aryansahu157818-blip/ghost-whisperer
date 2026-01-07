@@ -1,12 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { logOut } from "@/lib/firebase";
+
 import {
   LayoutDashboard,
   Archive,
   PlusCircle,
   User,
-  LogOut,
+  LogOut
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -14,10 +15,11 @@ export default function Sidebar() {
   const location = useLocation();
 
   const navItems = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/", label: "Home", icon: LayoutDashboard },
     { to: "/vault", label: "Ghost Vault", icon: Archive },
-	{ to: "/ghost", label: "Submit Project", icon: PlusCircle }
-    ];
+    { to: "/ghost", label: "Submit Project", icon: PlusCircle },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
+  ];
 
   return (
     <aside className="w-72 min-h-screen border-r border-sidebar-border bg-background relative">

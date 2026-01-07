@@ -12,6 +12,8 @@ import ProjectDetails from "./pages/ProjectDetails";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AddProject from "./pages/AddProject";
+import Dashboard from "./pages/Dashboard";
+
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/ghost" element={<GhostProject />} />
             <Route path="/project/:id" element={<ProjectDetails />} />
             <Route path="/auth" element={<Auth />} />
+			<Route path="/dashboard" element={<Dashboard />} />
+
 
             {/* ✅ Add project goes here INSIDE Routes */}
             <Route path="/add-project" element={<AddProject />} />
