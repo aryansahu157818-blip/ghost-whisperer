@@ -38,34 +38,94 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
     if (!title) return "Default";
     const lowerTitle = title.toLowerCase();
 
-    if (lowerTitle.includes("api") || lowerTitle.includes("server") || lowerTitle.includes("backend")) {
+    if (
+      lowerTitle.includes("api") ||
+      lowerTitle.includes("server") ||
+      lowerTitle.includes("backend")
+    )
       return "Circuit";
-    } else if (lowerTitle.includes("ai") || lowerTitle.includes("ml") || lowerTitle.includes("neural") || lowerTitle.includes("learning")) {
+    if (
+      lowerTitle.includes("ai") ||
+      lowerTitle.includes("ml") ||
+      lowerTitle.includes("neural") ||
+      lowerTitle.includes("learning")
+    )
       return "Quantum";
-    } else if (lowerTitle.includes("security") || lowerTitle.includes("crypto") || lowerTitle.includes("shield") || lowerTitle.includes("guard")) {
+    if (
+      lowerTitle.includes("security") ||
+      lowerTitle.includes("crypto") ||
+      lowerTitle.includes("shield") ||
+      lowerTitle.includes("guard")
+    )
       return "Shield";
-    } else if (lowerTitle.includes("data") || lowerTitle.includes("db") || lowerTitle.includes("storage") || lowerTitle.includes("warehouse")) {
+    if (
+      lowerTitle.includes("data") ||
+      lowerTitle.includes("db") ||
+      lowerTitle.includes("storage") ||
+      lowerTitle.includes("warehouse")
+    )
       return "Data";
-    } else if (lowerTitle.includes("game") || lowerTitle.includes("engine") || lowerTitle.includes("unity")) {
+    if (
+      lowerTitle.includes("game") ||
+      lowerTitle.includes("engine") ||
+      lowerTitle.includes("unity")
+    )
       return "Matrix";
-    } else if (lowerTitle.includes("web") || lowerTitle.includes("ui") || lowerTitle.includes("frontend") || lowerTitle.includes("design")) {
+    if (
+      lowerTitle.includes("web") ||
+      lowerTitle.includes("ui") ||
+      lowerTitle.includes("frontend") ||
+      lowerTitle.includes("design")
+    )
       return "Digital";
-    } else if (lowerTitle.includes("mobile") || lowerTitle.includes("ios") || lowerTitle.includes("android")) {
+    if (
+      lowerTitle.includes("mobile") ||
+      lowerTitle.includes("ios") ||
+      lowerTitle.includes("android")
+    )
       return "Future";
-    } else if (lowerTitle.includes("bio") || lowerTitle.includes("health") || lowerTitle.includes("medical") || lowerTitle.includes("dna")) {
+    if (
+      lowerTitle.includes("bio") ||
+      lowerTitle.includes("health") ||
+      lowerTitle.includes("medical") ||
+      lowerTitle.includes("dna")
+    )
       return "Biohazard";
-    } else if (lowerTitle.includes("finance") || lowerTitle.includes("bank") || lowerTitle.includes("money") || lowerTitle.includes("trade")) {
+    if (
+      lowerTitle.includes("finance") ||
+      lowerTitle.includes("bank") ||
+      lowerTitle.includes("money") ||
+      lowerTitle.includes("trade")
+    )
       return "Gold";
-    } else if (lowerTitle.includes("social") || lowerTitle.includes("chat") || lowerTitle.includes("messaging") || lowerTitle.includes("network")) {
+    if (
+      lowerTitle.includes("social") ||
+      lowerTitle.includes("chat") ||
+      lowerTitle.includes("messaging") ||
+      lowerTitle.includes("network")
+    )
       return "Network";
-    } else if (lowerTitle.includes("iot") || lowerTitle.includes("sensor") || lowerTitle.includes("device")) {
+    if (
+      lowerTitle.includes("iot") ||
+      lowerTitle.includes("sensor") ||
+      lowerTitle.includes("device")
+    )
       return "Signal";
-    } else {
-      const firstChar = lowerTitle.charAt(0);
-      const themes = ["Nebula", "Cyber", "Ghost", "Fire", "Ice", "Shadow", "Plasma", "Hacker", "Retro"];
-      const i = firstChar.charCodeAt(0) % themes.length;
-      return themes[i];
-    }
+
+    const firstChar = lowerTitle.charAt(0);
+    const themes = [
+      "Nebula",
+      "Cyber",
+      "Ghost",
+      "Fire",
+      "Ice",
+      "Shadow",
+      "Plasma",
+      "Hacker",
+      "Retro",
+    ];
+    const i = firstChar.charCodeAt(0) % themes.length;
+    return themes[i];
   };
 
   const getThemeGradient = (title: string = "") => {
@@ -97,7 +157,8 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
       Default: "from-slate-500/20 via-gray-500/20 to-zinc-500/20",
     };
 
-    const normalizedTheme = theme.charAt(0).toUpperCase() + theme.slice(1).toLowerCase();
+    const normalizedTheme =
+      theme.charAt(0).toUpperCase() + theme.slice(1).toLowerCase();
     const gradientClass = themeColors[normalizedTheme] || themeColors.Default;
 
     return `bg-gradient-to-br ${gradientClass}`;
@@ -106,24 +167,48 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
   const getProjectIcon = (title: string = "Ghost") => {
     const lowerTitle = title.toLowerCase();
 
-    if (lowerTitle.includes("api") || lowerTitle.includes("server") || lowerTitle.includes("backend")) {
+    if (
+      lowerTitle.includes("api") ||
+      lowerTitle.includes("server") ||
+      lowerTitle.includes("backend")
+    )
       return <GitFork className="w-6 h-6" />;
-    } else if (lowerTitle.includes("ai") || lowerTitle.includes("ml") || lowerTitle.includes("neural") || lowerTitle.includes("learning")) {
+    if (
+      lowerTitle.includes("ai") ||
+      lowerTitle.includes("ml") ||
+      lowerTitle.includes("neural") ||
+      lowerTitle.includes("learning")
+    )
       return <Brain className="w-6 h-6" />;
-    } else if (lowerTitle.includes("security") || lowerTitle.includes("crypto") || lowerTitle.includes("shield") || lowerTitle.includes("guard")) {
+    if (
+      lowerTitle.includes("security") ||
+      lowerTitle.includes("crypto") ||
+      lowerTitle.includes("shield") ||
+      lowerTitle.includes("guard")
+    )
       return <Shield className="w-6 h-6" />;
-    } else if (lowerTitle.includes("data") || lowerTitle.includes("db") || lowerTitle.includes("storage")) {
+    if (
+      lowerTitle.includes("data") ||
+      lowerTitle.includes("db") ||
+      lowerTitle.includes("storage")
+    )
       return <Database className="w-6 h-6" />;
-    } else if (lowerTitle.includes("game") || lowerTitle.includes("engine")) {
+    if (lowerTitle.includes("game") || lowerTitle.includes("engine"))
       return <Gamepad2 className="w-6 h-6" />;
-    } else {
-      return <Ghost className="w-6 h-6" />;
-    }
+
+    return <Ghost className="w-6 h-6" />;
   };
 
-  const displayHandle =
-    project.creatorName?.trim() ||
-    "Anonymous Ghost 👻";
+  const displayHandle = project.creatorName?.trim() || "Anonymous Ghost 👻";
+
+  const openGithub = (e: React.MouseEvent) => {
+    e.preventDefault(); // stops Link navigation
+    e.stopPropagation();
+
+    if (project.githubUrl) {
+      window.open(project.githubUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <motion.div
@@ -139,10 +224,17 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
-            <h3 className="text-lg font-bold text-foreground group-hover:neon-text transition-all truncate flex-1 mr-2">
-              {project.title}
-            </h3>
-            <span className={`px-2 py-1 text-xs rounded border ${getStatusColor()} uppercase tracking-wider`}>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-primary">{getProjectIcon(project.title)}</span>
+
+              <h3 className="text-lg font-bold text-foreground group-hover:neon-text transition-all truncate">
+                {project.title}
+              </h3>
+            </div>
+
+            <span
+              className={`px-2 py-1 text-xs rounded border ${getStatusColor()} uppercase tracking-wider`}
+            >
               {project.status}
             </span>
           </div>
@@ -158,19 +250,22 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
               <Star className="w-4 h-4" />
               <span>{project.stars || 0}</span>
             </div>
+
             <div className="flex items-center gap-1 text-muted-foreground">
               <GitFork className="w-4 h-4" />
               <span>{project.forks || 0}</span>
             </div>
-            <a
-              href={project.githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+
+            {/* ✅ GitHub icon as BUTTON (not <a>) */}
+            <button
+              type="button"
+              onClick={openGithub}
               className="ml-auto text-muted-foreground hover:text-primary transition-colors"
-              onClick={(e) => e.stopPropagation()}
+              aria-label="Open GitHub repository"
+              title="Open GitHub repository"
             >
               <Github className="w-4 h-4" />
-            </a>
+            </button>
           </div>
 
           {/* Vitality Bar */}
@@ -178,7 +273,7 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
             <VitalityBar score={project.vitalityScore} />
           </div>
 
-          {/* ✅ Creator Public Info (Ghost Handle only) */}
+          {/* Creator */}
           <div className="pt-4 border-t border-border space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <User className="w-3 h-3" />
@@ -188,7 +283,9 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
             {/* 🔒 Contact hidden */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Lock className="w-3 h-3" />
-              <span className="truncate">Identity hidden • unlock after approval</span>
+              <span className="truncate">
+                Identity hidden • unlock after approval
+              </span>
             </div>
           </div>
         </div>
