@@ -242,11 +242,7 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
 
           {/* Ghost Log */}
           <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            {project.ghostLog ? (
-              <div className="markdown-wrapper">
-                <ReactMarkdown>{project.ghostLog}</ReactMarkdown>
-              </div>
-            ) : <p>No description available</p>}
+            <ReactMarkdown>{project.ghostLog}</ReactMarkdown>
           </div>
 
           {/* Ghost Dossier Indicator */}

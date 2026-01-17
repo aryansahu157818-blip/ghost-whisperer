@@ -3,25 +3,13 @@ import { fetchGitHubStats, calculateVitalityScore } from "@/lib/github";
 import { addProject } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
-// ✅ Google AI
-import { generateGhostLog, generateThumbnailPrompt, generateSecurityReport } from "@/lib/gemini";
-
-// ✅ Free image generator (Pollinations)
-import { generateThumbnailUrl } from "@/lib/thumbnail";
-
-// ✅ FCM Notifications
-import { requestNotificationPermission } from "@/lib/fcm";
-
 export default function AddProject() {
   const { user, profile } = useAuth();
 
   const [githubUrl, setGithubUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [manualDescription, setManualDescription] = useState(""); // Manual description for image generation
   const [ghostLog, setGhostLog] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
-
-
+  const [manualDescription, setManualDescription] = useState(""); // ✅ NEW
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [message, setMessage] = useState("");
@@ -29,73 +17,31 @@ export default function AddProject() {
   const handleFetch = async () => {
     setMessage("");
     setStats(null);
-    setThumbnailUrl("");
-    setLoading(true);
 
-    const data = await fetchGitHubStats(githubUrl);
-
-    if (!data) {
-      setMessage("❌ Could not fetch repo — check URL.");
-      setLoading(false);
+    if (!githubUrl.trim()) {
+      setMessage("Please enter a GitHub repository URL first.");
       return;
     }
 
-    const vitality = calculateVitalityScore(data);
-    setStats({ ...data, vitality });
-    setLoading(false);
+    setLoading(true);
 
-    // Autofill title (optional)
-    if (!title) {
-      setTitle(data.name || "");
-    }
-
-    // ✅ Generate ghost log + thumbnail
     try {
-      setLoading(true);
-      setMessage("⚡ Generating Ghost Log + Thumbnail using Google Gemini...");
+      const data = await fetchGitHubStats(githubUrl);
 
-      const generatedLog = await generateGhostLog(
-        data.name || title || "Unknown Project",
-        data.description || "",
-        {
-          stars: data.stars ?? 0,
-          forks: data.forks ?? 0,
-          lastUpdated: data.lastUpdated ?? "",
-        }
-      );
+      if (!data) {
+        setMessage("Could not fetch repo — check URL.");
+        setLoading(false);
+        return;
+      }
 
-      setGhostLog(generatedLog);
+      const vitality = calculateVitalityScore(data);
+      setStats({ ...data, vitality });
 
-      // ✅ Use manual description if provided, otherwise use generated log for image generation
-      const imageDescription = manualDescription.trim() || generatedLog;
-      
-      // ✅ Gemini generates the image prompt
-      const prompt = await generateThumbnailPrompt(
-        data.name || title || "Ghost Project",
-        imageDescription
-      );
-
-      // ✅ Free image URL generated from prompt
-      const imgUrl = generateThumbnailUrl(prompt);
-      setThumbnailUrl(imgUrl);
-
-      // ✅ Generate security report
-      const generatedSecurityReport = await generateSecurityReport(
-        data.name || title || "Ghost Project",
-        data.description || "",
-        {
-          stars: data.stars ?? 0,
-          forks: data.forks ?? 0,
-          lastUpdated: data.lastUpdated ?? "",
-        }
-      );
-
-
-
-      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail ready.");
-    } catch (err) {
-      console.error(err);
-      setMessage("⚠️ Repo fetched, but AI generation failed.");
+      // Auto-fill title if empty
+      if (!title.trim()) setTitle(data.name || "");
+    } catch (e) {
+      console.error(e);
+      setMessage("Failed to fetch repository data.");
     } finally {
       setLoading(false);
     }
@@ -112,8 +58,23 @@ export default function AddProject() {
       return;
     }
 
-    if (!stats || !title) {
-      setMessage("Fill everything first.");
+    if (!stats) {
+      setMessage("Fetch repo data first.");
+      return;
+    }
+
+    if (!title.trim()) {
+      setMessage("Please enter project title.");
+      return;
+    }
+
+    if (!ghostLog.trim()) {
+      setMessage("Please generate/write ghost log.");
+      return;
+    }
+
+    if (!manualDescription.trim()) {
+      setMessage("Please add manual description (creator notes).");
       return;
     }
 
@@ -121,69 +82,38 @@ export default function AddProject() {
     setMessage("");
 
     try {
-      // Step A: Call Gemini API with Professional Template
-      const generatedLog = await generateGhostLog(
+      await addProject({
         title,
-        manualDescription || ghostLog,
-        {
-          stars: stats.stars ?? 0,
-          forks: stats.forks ?? 0,
-          lastUpdated: stats.lastUpdated ?? "",
-        }
-      );
+        githubUrl,
 
-      // Step B: await the Firestore addDoc to ensure data is saved first
-      try {
-        await addProject({
-          title,
-          githubUrl,
+        // ✅ public identity (safe)
+        creatorName: profile.ghostHandle,
 
-          // ✅ public identity (safe)
-          creatorName: profile.ghostHandle,
+        // ✅ keep real email for approval + contact unlock later
+        creatorEmail: user.email || "",
 
-          // ✅ keep real email for approval + contact unlock later
-          creatorEmail: (user.email || "").toLowerCase(),
+        // ✅ for security rules later
+        creatorUid: user.uid,
 
-          // ✅ ownership for security rules
-          creatorUid: user.uid,
+        // AI summary
+        ghostLog,
 
-          ghostLog: generatedLog, // Use the Gemini-generated log
-          thumbnailUrl, // ✅ NEW (AI thumbnail)
+        // ✅ NEW: Manual creator notes
+        manualDescription,
 
-          vitalityScore: stats.vitality,
-          status: "active",
+        vitalityScore: stats.vitality,
+        status: "active",
 
-          stars: stats.stars ?? 0,
-          forks: stats.forks ?? 0,
-          lastUpdated: stats.lastUpdated ?? "",
-        });
+        stars: stats.stars ?? 0,
+        forks: stats.forks ?? 0,
+        lastUpdated: stats.lastUpdated ?? "",
+      });
 
-        setMessage("✅ Project added to vault!");
-        
-        // Step C: Immediately after success, trigger browser notification
-        try {
-          if (Notification.permission === "granted") {
-            new Notification("👻 Ghost Vault Update", {
-              body: "New Soul Captured! Your project is now live.",
-              icon: "/favicon.ico"
-            });
-          }
-        } catch (notificationError) {
-          console.error("FCM Notification failed:", notificationError);
-          // Continue without blocking - project is already saved
-        }
-      } catch (firestoreError) {
-        console.error("Firestore Error:", firestoreError);
-        setMessage("❌ Failed to submit project. Check console for details.");
-        throw firestoreError; // Re-throw to be caught by outer catch
-      }
-      
+      setMessage("✅ Project added to vault!");
       setGithubUrl("");
       setTitle("");
-      setManualDescription(""); // Clear manual description too
       setGhostLog("");
-      setThumbnailUrl("");
-
+      setManualDescription(""); // ✅ reset
       setStats(null);
     } catch (err) {
       console.error(err);
@@ -195,27 +125,34 @@ export default function AddProject() {
 
   return (
     <div className="max-w-2xl mx-auto py-6 space-y-4">
-      <h1 className="text-xl font-bold">Add Project</h1>
+      <h1 className="text-xl font-bold">Submit a Project</h1>
 
-      {message && <p className="text-sm opacity-80">{message}</p>}
+      {message && (
+        <p className="text-sm opacity-80 border border-border rounded p-3">
+          {message}
+        </p>
+      )}
 
-      <input
-        className="w-full border p-2"
-        placeholder="GitHub Repo URL"
-        value={githubUrl}
-        onChange={(e) => setGithubUrl(e.target.value)}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium">GitHub Repo URL</label>
+        <input
+          className="w-full border p-2 rounded bg-background"
+          placeholder="https://github.com/user/repo"
+          value={githubUrl}
+          onChange={(e) => setGithubUrl(e.target.value)}
+        />
+      </div>
 
       <button
         onClick={handleFetch}
-        className="border px-4 py-2 w-full"
+        className="cyber-button w-full"
         disabled={loading}
       >
-        {loading ? "Working..." : "Fetch Repo + Generate AI Ghost Log"}
+        {loading ? "Fetching..." : "Fetch Repo Data"}
       </button>
 
       {stats && (
-        <div className="border p-3 space-y-2 rounded">
+        <div className="cyber-card p-4 space-y-2">
           <p>
             <strong>Name:</strong> {stats.name}
           </p>
@@ -223,50 +160,58 @@ export default function AddProject() {
             <strong>Stars:</strong> {stats.stars}
           </p>
           <p>
+            <strong>Forks:</strong> {stats.forks}
+          </p>
+          <p>
             <strong>Vitality:</strong> {stats.vitality}
+          </p>
+          <p className="text-xs opacity-70">
+            Last Updated:{" "}
+            {stats.lastUpdated
+              ? new Date(stats.lastUpdated).toLocaleDateString()
+              : "N/A"}
           </p>
         </div>
       )}
 
-      {/* ✅ Manual Description - Top Priority */}
-      <textarea
-        className="w-full border p-2"
-        placeholder="Manual Description (for generating beautiful image)"
-        rows={3}
-        value={manualDescription}
-        onChange={(e) => setManualDescription(e.target.value)}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Project Title</label>
+        <input
+          className="w-full border p-2 rounded bg-background"
+          placeholder="Project Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
 
-      {/* ✅ Thumbnail preview */}
-      {thumbnailUrl && (
-        <div className="border p-3 rounded space-y-2">
-          <p className="text-sm font-semibold">AI Thumbnail Preview</p>
-          <img
-            src={thumbnailUrl}
-            alt="AI Thumbnail"
-            className="w-full h-48 object-cover rounded"
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Ghost Log (AI/Generated)</label>
+        <textarea
+          className="w-full border p-2 rounded bg-background"
+          placeholder="Why is this project abandoned? Summary for juniors."
+          value={ghostLog}
+          onChange={(e) => setGhostLog(e.target.value)}
+          rows={4}
+        />
+      </div>
 
-      <input
-        className="w-full border p-2"
-        placeholder="Project Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <textarea
-        className="w-full border p-2"
-        placeholder="Ghost Log (auto-generated by Gemini, editable)"
-        rows={4}
-        value={ghostLog}
-        onChange={(e) => setGhostLog(e.target.value)}
-      />
+      {/* ✅ NEW FIELD */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">
+          Creator Notes (Manual Description) 📝
+        </label>
+        <textarea
+          className="w-full border p-2 rounded bg-background"
+          placeholder="Write clear handover notes: what was completed, what is pending, how juniors can continue, required setup, etc."
+          value={manualDescription}
+          onChange={(e) => setManualDescription(e.target.value)}
+          rows={5}
+        />
+      </div>
 
       <button
         onClick={handleSubmit}
-        className="border px-4 py-2 w-full"
+        className="cyber-button w-full"
         disabled={loading}
       >
         {loading ? "Submitting..." : "Submit to Vault"}

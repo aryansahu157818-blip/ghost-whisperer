@@ -166,11 +166,6 @@
     text-wrap: balance;
   }
 
-  /* Markdown wrapper to prevent layout issues */
-  .markdown-wrapper {
-    overflow: hidden;
-  }
-
   /* Hide external watermarks and floating badges */
   .lovable-badge,
   [class*="lovable-badge"],

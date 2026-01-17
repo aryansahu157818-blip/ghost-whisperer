@@ -70,6 +70,7 @@ export interface Project {
   // ✅ AI Thumbnail URL (Pollinations based)
   thumbnailUrl?: string;
 
+  manualDescription?: string;
 
 
   vitalityScore: number;
@@ -109,41 +110,4 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
   if (!snap.exists()) return null;
 
   return { id: snap.id, ...snap.data() } as Project;
-};
-
-// ---------- INTEREST REQUESTS ----------
-
-export interface InterestRequest {
-  id?: string;
-  projectId: string;
-  projectName: string;
-  requesterId: string;
-  requesterName: string;
-  requesterEmail: string;
-  requesterLinkedIn?: string;
-  requesterGithub?: string;
-  message: string;
-  createdAt: Timestamp;
-  status: 'pending' | 'approved' | 'rejected';
-}
-
-export const sendInterestRequest = async (request: Omit<InterestRequest, 'id' | 'createdAt' | 'status'>) => {
-  const docRef = await addDoc(collection(db, "requests"), {
-    ...request,
-    createdAt: Timestamp.now(),
-    status: 'pending',
-  });
-
-  return docRef.id;
-};
-
-export const getInterestRequestsByProject = async (projectId: string): Promise<InterestRequest[]> => {
-  const { getDocs, query, where } = await import('firebase/firestore');
-  const q = query(collection(db, "requests"), where("projectId", "==", projectId));
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  })) as InterestRequest[];
 };

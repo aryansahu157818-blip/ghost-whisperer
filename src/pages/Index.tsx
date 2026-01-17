@@ -54,17 +54,17 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/vault"
-              className="inline-flex items-center justify-center gap-2 text-lg px-6 py-3 rounded-lg border-2 border-[#00FF41] bg-[#000000] text-[#00FF41] font-semibold hover:bg-[#111111] transition-all duration-200"
+              className="cyber-button inline-flex items-center justify-center gap-2 text-lg"
             >
               <Archive className="w-5 h-5" />
-              Enter a Vault
+              Explore the Vault
             </Link>
             <Link
               to="/ghost"
-              className="inline-flex items-center justify-center gap-2 text-lg px-6 py-3 rounded-lg border-2 border-[#00FF41] bg-[#000000] text-[#00FF41] font-semibold hover:bg-[#111111] transition-all duration-200"
+              className="px-6 py-3 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/10 transition-all inline-flex items-center justify-center gap-2"
             >
               <Ghost className="w-5 h-5" />
-              Ghost a Project
+              Submit a Project
             </Link>
           </div>
         </motion.div>
