@@ -70,6 +70,9 @@ export interface Project {
   // ✅ AI Thumbnail URL (Pollinations based)
   thumbnailUrl?: string;
 
+  // ✅ Ghost Dossier in Markdown format
+  ghostDossier?: string;
+
   vitalityScore: number;
   status: "active" | "dormant" | "haunted";
 

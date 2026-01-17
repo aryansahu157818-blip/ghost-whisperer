@@ -4,18 +4,23 @@ import { addProject } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
 // ✅ Google AI
-import { generateGhostLog, generateThumbnailPrompt } from "@/lib/gemini";
+import { generateGhostLog, generateThumbnailPrompt, generateSecurityReport } from "@/lib/gemini";
 
 // ✅ Free image generator (Pollinations)
 import { generateThumbnailUrl } from "@/lib/thumbnail";
+
+// ✅ FCM Notifications
+import { requestNotificationPermission } from "@/lib/fcm";
 
 export default function AddProject() {
   const { user, profile } = useAuth();
 
   const [githubUrl, setGithubUrl] = useState("");
   const [title, setTitle] = useState("");
+  const [manualDescription, setManualDescription] = useState(""); // Manual description for image generation
   const [ghostLog, setGhostLog] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [ghostDossier, setGhostDossier] = useState(""); // Ghost Dossier in Markdown format
 
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -61,17 +66,33 @@ export default function AddProject() {
 
       setGhostLog(generatedLog);
 
+      // ✅ Use manual description if provided, otherwise use generated log for image generation
+      const imageDescription = manualDescription.trim() || generatedLog;
+      
       // ✅ Gemini generates the image prompt
       const prompt = await generateThumbnailPrompt(
         data.name || title || "Ghost Project",
-        generatedLog
+        imageDescription
       );
 
       // ✅ Free image URL generated from prompt
       const imgUrl = generateThumbnailUrl(prompt);
       setThumbnailUrl(imgUrl);
 
-      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail ready.");
+      // ✅ Generate security report
+      const generatedSecurityReport = await generateSecurityReport(
+        data.name || title || "Ghost Project",
+        data.description || "",
+        {
+          stars: data.stars ?? 0,
+          forks: data.forks ?? 0,
+          lastUpdated: data.lastUpdated ?? "",
+        }
+      );
+
+      setGhostDossier(generatedSecurityReport);
+
+      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail + Security Report ready.");
     } catch (err) {
       console.error(err);
       setMessage("⚠️ Repo fetched, but AI generation failed.");
@@ -100,7 +121,19 @@ export default function AddProject() {
     setMessage("");
 
     try {
-      await addProject({
+      // Step A: Call Gemini API with Professional Template
+      const generatedLog = await generateGhostLog(
+        title,
+        manualDescription || ghostLog,
+        {
+          stars: stats.stars ?? 0,
+          forks: stats.forks ?? 0,
+          lastUpdated: stats.lastUpdated ?? "",
+        }
+      );
+
+      // Step B: await the Firestore addDoc to ensure data is saved first
+      const projectId = await addProject({
         title,
         githubUrl,
 
@@ -113,7 +146,7 @@ export default function AddProject() {
         // ✅ ownership for security rules
         creatorUid: user.uid,
 
-        ghostLog,
+        ghostLog: generatedLog, // Use the Gemini-generated log
         thumbnailUrl, // ✅ NEW (AI thumbnail)
 
         vitalityScore: stats.vitality,
@@ -125,10 +158,26 @@ export default function AddProject() {
       });
 
       setMessage("✅ Project added to vault!");
+      
+      // Step C: Immediately after success, trigger browser notification
+      try {
+        if (Notification.permission === "granted") {
+          new Notification("👻 Ghost Vault Update", {
+            body: "New Soul Captured! Your project is now live.",
+            icon: "/favicon.ico"
+          });
+        }
+      } catch (notificationError) {
+        console.error("Notification failed:", notificationError);
+        // Continue without blocking - project is already saved
+      }
+      
       setGithubUrl("");
       setTitle("");
+      setManualDescription(""); // Clear manual description too
       setGhostLog("");
       setThumbnailUrl("");
+      setGhostDossier(""); // Clear ghost dossier too
       setStats(null);
     } catch (err) {
       console.error(err);
@@ -172,6 +221,15 @@ export default function AddProject() {
           </p>
         </div>
       )}
+
+      {/* ✅ Manual Description - Top Priority */}
+      <textarea
+        className="w-full border p-2"
+        placeholder="Manual Description (for generating beautiful image)"
+        rows={3}
+        value={manualDescription}
+        onChange={(e) => setManualDescription(e.target.value)}
+      />
 
       {/* ✅ Thumbnail preview */}
       {thumbnailUrl && (

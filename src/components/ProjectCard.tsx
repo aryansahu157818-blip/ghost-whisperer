@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import {
   Github,
   Star,
@@ -240,9 +241,17 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
           </div>
 
           {/* Ghost Log */}
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            {project.ghostLog}
-          </p>
+          <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
+            <ReactMarkdown>{project.ghostLog}</ReactMarkdown>
+          </div>
+
+          {/* Security Report Indicator */}
+          {project.ghostDossier && (
+            <div className="flex items-center gap-1 text-xs text-primary mb-2">
+              <span className="w-2 h-2 bg-primary rounded-full"></span>
+              <span>Ghost Dossier available</span>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="flex items-center gap-4 mb-4 text-sm">

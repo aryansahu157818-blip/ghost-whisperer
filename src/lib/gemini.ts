@@ -61,11 +61,23 @@ export const generateGhostLog = async (
   stats: { stars: number; forks: number; lastUpdated: string }
 ): Promise<string> => {
   const prompt = `
-Analyze this GitHub project and return a unique, creative, technical summary in exactly 3 sentences.
-Rules:
-- Do NOT use generic ghost metaphors.
-- Keep it technical and hackathon-friendly.
-- Mention what it does + what problem it solves + current state.
+Generate a Ghost Security Dossier in this exact Markdown format:
+
+# 👻 GHOST SECURITY DOSSIER: ${projectName}
+## 🛠 Technical Soul Analysis
+> [Insert a 2-line dark tech-noir summary here]
+
+### 📊 Vulnerability Audit
+| Component | Risk Level | Status |
+| :--- | :--- | :--- |
+| Repository Logic | Low | 🟢 SECURE |
+| Dependency Health | Medium | 🟡 AUDIT REQ |
+| Soul Integrity | Critical | 🔴 ENCRYPTED |
+
+### 🔒 Ghost Recommendations
+* **Identity:** Obfuscate all entry points.
+* **Storage:** Ensure the Vault remains cold-stored.
+* **Access:** Rotate VAPID and Gemini keys periodically.
 
 Project Title: ${projectName}
 Description: ${description || "No description provided"}
@@ -73,7 +85,7 @@ Stars: ${stats.stars}
 Forks: ${stats.forks}
 Last Updated: ${stats.lastUpdated}
 
-Return only the 3-sentence summary text.
+Return only the Markdown content with the exact format shown above.
 `;
 
   try {
@@ -128,5 +140,62 @@ Return ONLY the prompt line.
 
     // fallback prompt
     return `cinematic cyberpunk ghost-themed software project thumbnail, neon glow, code fragments, haunted digital aura, minimal clean illustration, dark background, high detail, no text`;
+  }
+}
+
+/**
+ * ✅ Generates a Ghost Security Dossier in Markdown format
+ */
+export const generateSecurityReport = async (
+  projectName: string,
+  description: string,
+  stats: { stars: number; forks: number; lastUpdated: string }
+): Promise<string> => {
+  const prompt = `
+Analyze the provided project details: ${description || "No description provided"}. Generate a 'Ghost Security Dossier' in Markdown format. Include:
+- A main heading for the dossier (e.g., '# Ghost Security Dossier for ${projectName}').
+- A sub-heading for 'Vulnerability Overview'.
+- A Markdown table with columns 'Component', 'Potential Risk', and 'Recommendation'.
+- A final section with 'Actionable Steps' in a bulleted list.
+
+Project Title: ${projectName}
+Stars: ${stats.stars}
+Forks: ${stats.forks}
+Last Updated: ${stats.lastUpdated}
+
+Format the response in Markdown with proper headings, tables, and lists.
+Return only the Markdown content without any additional text.
+`;
+
+  try {
+    const result = await callGemini(prompt, { temperature: 0.5, maxOutputTokens: 800 });
+    return result;
+  } catch (error) {
+    console.error("Gemini Error (SecurityReport):", error);
+
+    // fallback security report
+    return `# Ghost Security Dossier: ${projectName}
+
+## Executive Summary
+This security analysis evaluates the project for potential risks and vulnerabilities.
+
+## Risk Level Assessment
+
+| Risk Level | Areas |
+|------------|-------|
+| Critical   | 0     |
+| High       | 0     |
+| Medium     | 1-2   |
+| Low        | 2-3   |
+
+## Security Recommendations
+- Implement proper input validation
+- Add authentication and authorization
+- Regular security audits
+
+## Potential Vulnerabilities
+- Code injection possibilities
+- Weak authentication mechanisms
+`;
   }
 };
