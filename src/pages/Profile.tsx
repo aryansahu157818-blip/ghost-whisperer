@@ -34,6 +34,12 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     if (!user) return;
     
+    // Debug: Log the data being saved
+    console.log("Saving Profile Data:", { 
+      linkedInUsername: linkedInUsername.trim() || null,
+      githubProfileUrl: githubProfileUrl.trim() || null
+    });
+    
     try {
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
@@ -147,11 +153,37 @@ export default function Profile() {
                     placeholder="https://github.com/username"
                     className="w-full cyber-input"
                   />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="cyber-button text-sm px-3 py-2"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={async () => {
+                        // Fetch fresh profile data on cancel
+                        if (user) {
+                          const userDocRef = doc(db, "users", user.uid);
+                          const userSnap = await getDoc(userDocRef);
+                          if (userSnap.exists()) {
+                            const freshProfile = userSnap.data();
+                            setLinkedInUsername(freshProfile.linkedInUsername || "");
+                            setGithubProfileUrl(freshProfile.githubProfileUrl || "");
+                          }
+                        }
+                        setIsEditing(false);
+                      }}
+                      className="cyber-button text-sm px-3 py-2 bg-secondary text-foreground"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-3 p-3 rounded border border-border bg-sidebar-accent">
                   <span className="font-semibold">
-                    {profile?.githubProfileUrl ? "Set" : "Not set"}
+                    {profile?.githubProfileUrl ? profile.githubProfileUrl : "Not set"}
                   </span>
                   <button
                     onClick={() => setIsEditing(true)}
