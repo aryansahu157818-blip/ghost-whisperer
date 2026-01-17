@@ -41,7 +41,7 @@ export default function Profile() {
         githubProfileUrl: githubProfileUrl.trim() || null,
       }, { merge: true });
       
-      toast.success("Professional Identity Secured! ✅");
+      toast.success("Professional Identity Linked ✅");
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);

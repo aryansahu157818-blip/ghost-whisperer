@@ -46,15 +46,20 @@ export default function ProjectDetails() {
     }
       
     try {
-      // Send interest request to Firestore
+      // Auto-fill professional links from user profile
+      const professionalLinks = {
+        requesterLinkedIn: profile.linkedInUsername || undefined,
+        requesterGithub: profile.githubProfileUrl || undefined
+      };
+        
+      // Send interest request to Firestore with auto-filled links
       await sendInterestRequest({
         projectId: project.id!,
         projectName: project.title,
         requesterId: user.uid,
         requesterName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
         requesterEmail: user.email!,
-        requesterLinkedIn: profile.linkedInUsername || undefined,
-        requesterGithub: profile.githubProfileUrl || undefined,
+        ...professionalLinks,
         message: interestMessage,
       });
         

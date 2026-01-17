@@ -237,18 +237,18 @@ export default function Dashboard() {
                   <p className="font-semibold">{r.projectName}</p>
 
                   <p className="text-sm mt-1">
-                    {r.requesterName}
+                    <span className="font-medium">{r.requesterName}</span>
                   </p>
                   
                   {/* LinkedIn Profile */}
                   {r.requesterLinkedIn && (
                     <p className="text-sm mt-1 flex items-center gap-1">
-                      <LinkIcon className="w-4 h-4 text-primary" />
+                      <LinkIcon className="w-4 h-4 text-[#00FF41]" />
                       <a 
                         href={`https://www.linkedin.com/in/${r.requesterLinkedIn}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 underline neon-text"
+                        className="text-[#00FF41] hover:text-[#00CC33] underline font-medium"
                       >
                         LinkedIn Profile
                       </a>
@@ -258,12 +258,12 @@ export default function Dashboard() {
                   {/* GitHub Profile */}
                   {r.requesterGithub && (
                     <p className="text-sm mt-1 flex items-center gap-1">
-                      <Github className="w-4 h-4 text-primary" />
+                      <Github className="w-4 h-4 text-[#00FF41]" />
                       <a 
                         href={r.requesterGithub} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 underline neon-text"
+                        className="text-[#00FF41] hover:text-[#00CC33] underline font-medium"
                       >
                         GitHub Profile
                       </a>
