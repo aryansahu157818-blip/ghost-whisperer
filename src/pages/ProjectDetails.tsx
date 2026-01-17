@@ -5,7 +5,7 @@ import { Github, Star, GitFork, Calendar, Activity, Shield, FileText } from "luc
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProjectById, Project, sendInterestRequest } from "@/lib/firebase";
-import ReactMarkdown from "react-markdown";
+import { SafeMarkdown } from "@/components/SafeMarkdown";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
@@ -196,9 +196,7 @@ export default function ProjectDetails() {
               </h2>
               
               <div className="prose prose-invert max-w-none bg-secondary/20 p-6 rounded-lg markdown-content">
-                <ReactMarkdown>
-                  {project.ghostLog}
-                </ReactMarkdown>
+                <SafeMarkdown content={(project.ghostLog || "")} />
               </div>
             </div>
           )}

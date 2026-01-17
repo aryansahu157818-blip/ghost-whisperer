@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 import {
   Github,
   Star,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { Project } from "@/lib/firebase";
 import { VitalityBar } from "./VitalityBar";
+import { SafeMarkdown } from "@/components/SafeMarkdown";
 
 interface ProjectCardProps {
   project: Project;
@@ -242,7 +242,7 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
 
           {/* Ghost Log */}
           <div className="text-sm text-muted-foreground mb-4 line-clamp-3">
-            <ReactMarkdown>{project.ghostLog}</ReactMarkdown>
+            <SafeMarkdown content={(project.ghostLog || "")} />
           </div>
 
           {/* Ghost Dossier Indicator */}
