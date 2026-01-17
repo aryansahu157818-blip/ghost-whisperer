@@ -3,7 +3,7 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
-import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function Profile() {
@@ -36,16 +36,16 @@ export default function Profile() {
     
     try {
       const userDocRef = doc(db, "users", user.uid);
-      await updateDoc(userDocRef, {
+      await setDoc(userDocRef, {
         linkedInUsername: linkedInUsername.trim() || null,
-        githubProfileUrl: githubProfileUrl.trim() || null
-      });
+        githubProfileUrl: githubProfileUrl.trim() || null,
+      }, { merge: true });
       
-      toast.success("Profile updated successfully ✅");
+      toast.success("Professional Identity Secured! ✅");
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast.error(`Failed to update profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -101,9 +101,17 @@ export default function Profile() {
                       Save
                     </button>
                     <button
-                      onClick={() => {
-                        setLinkedInUsername(profile?.linkedInUsername || "");
-                        setGithubProfileUrl(profile?.githubProfileUrl || "");
+                      onClick={async () => {
+                        // Fetch fresh profile data on cancel
+                        if (user) {
+                          const userDocRef = doc(db, "users", user.uid);
+                          const userSnap = await getDoc(userDocRef);
+                          if (userSnap.exists()) {
+                            const freshProfile = userSnap.data();
+                            setLinkedInUsername(freshProfile.linkedInUsername || "");
+                            setGithubProfileUrl(freshProfile.githubProfileUrl || "");
+                          }
+                        }
                         setIsEditing(false);
                       }}
                       className="cyber-button text-sm px-3 py-2 bg-secondary text-foreground"

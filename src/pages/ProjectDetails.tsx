@@ -39,6 +39,12 @@ export default function ProjectDetails() {
   const handleInterestRequest = async () => {
     if (!user || !profile || !project) return;
       
+    // Check if profile has required information
+    if (!profile.linkedInUsername && !profile.githubProfileUrl) {
+      alert('Please update your professional links in your profile first');
+      return;
+    }
+      
     try {
       // Send interest request to Firestore
       await sendInterestRequest({
