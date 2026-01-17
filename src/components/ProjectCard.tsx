@@ -245,8 +245,8 @@ export const ProjectCard = ({ project, index }: ProjectCardProps) => {
             <ReactMarkdown>{project.ghostLog}</ReactMarkdown>
           </div>
 
-          {/* Security Report Indicator */}
-          {project.ghostDossier && (
+          {/* Ghost Dossier Indicator */}
+          {project.ghostLog && (
             <div className="flex items-center gap-1 text-xs text-primary mb-2">
               <span className="w-2 h-2 bg-primary rounded-full"></span>
               <span>Ghost Dossier available</span>

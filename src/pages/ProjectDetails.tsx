@@ -162,17 +162,17 @@ export default function ProjectDetails() {
             </div>
           )}
 
-          {/* Security Report */}
-          {project.ghostDossier && (
+          {/* Ghost Dossier */}
+          {project.ghostLog && (
             <div className="cyber-card mb-8">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Ghost Security Dossier
+                Ghost Dossier
               </h2>
               
               <div className="prose prose-invert max-w-none bg-secondary/20 p-6 rounded-lg markdown-content">
                 <ReactMarkdown>
-                  {project.ghostDossier}
+                  {project.ghostLog}
                 </ReactMarkdown>
               </div>
             </div>

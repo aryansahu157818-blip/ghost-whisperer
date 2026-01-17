@@ -61,23 +61,18 @@ export const generateGhostLog = async (
   stats: { stars: number; forks: number; lastUpdated: string }
 ): Promise<string> => {
   const prompt = `
-Generate a Ghost Security Dossier in this exact Markdown format:
+Generate a Ghost Dossier in this exact Markdown format:
 
-# 👻 GHOST SECURITY DOSSIER: ${projectName}
-## 🛠 Technical Soul Analysis
-> [Insert a 2-line dark tech-noir summary here]
+# 👻 GHOST DOSSIER: ${projectName}
+## 🛠 Technical Summary
+[${description || "No description provided"}]
 
-### 📊 Vulnerability Audit
-| Component | Risk Level | Status |
+### 📊 Vulnerability Table
+| Component | Risk | Status |
 | :--- | :--- | :--- |
-| Repository Logic | Low | 🟢 SECURE |
-| Dependency Health | Medium | 🟡 AUDIT REQ |
-| Soul Integrity | Critical | 🔴 ENCRYPTED |
-
-### 🔒 Ghost Recommendations
-* **Identity:** Obfuscate all entry points.
-* **Storage:** Ensure the Vault remains cold-stored.
-* **Access:** Rotate VAPID and Gemini keys periodically.
+| Data Privacy | High | 🛡️ MASKED |
+| Access Control | Medium | 🔐 SECURE |
+| Dependencies | Low | ✅ VERIFIED |
 
 Project Title: ${projectName}
 Description: ${description || "No description provided"}

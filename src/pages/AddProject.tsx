@@ -20,7 +20,7 @@ export default function AddProject() {
   const [manualDescription, setManualDescription] = useState(""); // Manual description for image generation
   const [ghostLog, setGhostLog] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [ghostDossier, setGhostDossier] = useState(""); // Ghost Dossier in Markdown format
+
 
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -90,9 +90,9 @@ export default function AddProject() {
         }
       );
 
-      setGhostDossier(generatedSecurityReport);
 
-      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail + Security Report ready.");
+
+      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail ready.");
     } catch (err) {
       console.error(err);
       setMessage("⚠️ Repo fetched, but AI generation failed.");
@@ -133,43 +133,49 @@ export default function AddProject() {
       );
 
       // Step B: await the Firestore addDoc to ensure data is saved first
-      const projectId = await addProject({
-        title,
-        githubUrl,
-
-        // ✅ public identity (safe)
-        creatorName: profile.ghostHandle,
-
-        // ✅ keep real email for approval + contact unlock later
-        creatorEmail: (user.email || "").toLowerCase(),
-
-        // ✅ ownership for security rules
-        creatorUid: user.uid,
-
-        ghostLog: generatedLog, // Use the Gemini-generated log
-        thumbnailUrl, // ✅ NEW (AI thumbnail)
-
-        vitalityScore: stats.vitality,
-        status: "active",
-
-        stars: stats.stars ?? 0,
-        forks: stats.forks ?? 0,
-        lastUpdated: stats.lastUpdated ?? "",
-      });
-
-      setMessage("✅ Project added to vault!");
-      
-      // Step C: Immediately after success, trigger browser notification
       try {
-        if (Notification.permission === "granted") {
-          new Notification("👻 Ghost Vault Update", {
-            body: "New Soul Captured! Your project is now live.",
-            icon: "/favicon.ico"
-          });
+        await addProject({
+          title,
+          githubUrl,
+
+          // ✅ public identity (safe)
+          creatorName: profile.ghostHandle,
+
+          // ✅ keep real email for approval + contact unlock later
+          creatorEmail: (user.email || "").toLowerCase(),
+
+          // ✅ ownership for security rules
+          creatorUid: user.uid,
+
+          ghostLog: generatedLog, // Use the Gemini-generated log
+          thumbnailUrl, // ✅ NEW (AI thumbnail)
+
+          vitalityScore: stats.vitality,
+          status: "active",
+
+          stars: stats.stars ?? 0,
+          forks: stats.forks ?? 0,
+          lastUpdated: stats.lastUpdated ?? "",
+        });
+
+        setMessage("✅ Project added to vault!");
+        
+        // Step C: Immediately after success, trigger browser notification
+        try {
+          if (Notification.permission === "granted") {
+            new Notification("👻 Ghost Vault Update", {
+              body: "New Soul Captured! Your project is now live.",
+              icon: "/favicon.ico"
+            });
+          }
+        } catch (notificationError) {
+          console.error("FCM Notification failed:", notificationError);
+          // Continue without blocking - project is already saved
         }
-      } catch (notificationError) {
-        console.error("Notification failed:", notificationError);
-        // Continue without blocking - project is already saved
+      } catch (firestoreError) {
+        console.error("Firestore Error:", firestoreError);
+        setMessage("❌ Failed to submit project. Check console for details.");
+        throw firestoreError; // Re-throw to be caught by outer catch
       }
       
       setGithubUrl("");
@@ -177,7 +183,7 @@ export default function AddProject() {
       setManualDescription(""); // Clear manual description too
       setGhostLog("");
       setThumbnailUrl("");
-      setGhostDossier(""); // Clear ghost dossier too
+
       setStats(null);
     } catch (err) {
       console.error(err);
