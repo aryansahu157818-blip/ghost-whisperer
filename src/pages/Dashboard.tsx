@@ -10,24 +10,31 @@ import {
   onSnapshot,
   updateDoc,
   doc,
+  serverTimestamp,
 } from "firebase/firestore";
 
 interface Interest {
   id: string;
   projectId: string;
   projectTitle: string;
+
+  juniorUid?: string;
   juniorName?: string;
   juniorEmail?: string;
 
-  // ✅ senior info
+  // senior info
   seniorEmail?: string;
   seniorName?: string;
 
-  // ✅ repo info
+  // repo info
   githubUrl?: string;
 
   message: string;
   status: "pending" | "approved" | "rejected";
+
+  // 🔓 unlock
+  contactUnlocked?: boolean;
+  unlockedAt?: any;
 }
 
 export default function Dashboard() {
@@ -41,8 +48,9 @@ export default function Dashboard() {
     if (!user) return;
 
     let loaded = { sent: false, received: false };
+    setLoading(true);
 
-    // 👨‍🎓 requests I SENT (junior history)
+    // 👨‍🎓 requests I SENT (junior)
     const sent = query(
       collectionGroup(db, "interests"),
       where("juniorUid", "==", user.uid)
@@ -62,7 +70,7 @@ export default function Dashboard() {
       }
     );
 
-    // 👨‍💻 requests TO my projects (senior history)
+    // 👨‍💻 requests to MY projects (senior)
     const incoming = query(
       collectionGroup(db, "interests"),
       where("seniorEmail", "==", user.email?.toLowerCase())
@@ -96,7 +104,16 @@ export default function Dashboard() {
     status: "approved" | "rejected"
   ) => {
     const ref = doc(db, "projects", projectId, "interests", interestId);
-    await updateDoc(ref, { status });
+
+    await updateDoc(ref, {
+      status,
+      decidedAt: serverTimestamp(),
+
+      // 🔓 only unlock after approval
+      ...(status === "approved"
+        ? { contactUnlocked: true, unlockedAt: serverTimestamp() }
+        : { contactUnlocked: false }),
+    });
   };
 
   const badgeClass = (status: Interest["status"]) => {
@@ -115,7 +132,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* ========================= MY REQUESTS (JUNIOR) ========================= */}
+        {/* ===================== MY REQUESTS (JUNIOR) ===================== */}
         <section>
           <h2 className="text-xl font-semibold mb-4">My Requests 👨‍🎓</h2>
 
@@ -143,8 +160,8 @@ export default function Dashboard() {
                   </span>
                 </div>
 
-                {/* ✅ Contact reveal only after approval */}
-                {r.status === "approved" ? (
+                {/* 🔓 Contact reveal */}
+                {r.status === "approved" && r.contactUnlocked ? (
                   <div className="mt-4 p-3 rounded border border-green-500/30 bg-green-500/10">
                     <p className="text-sm font-semibold text-green-200">
                       Contact Unlocked ✅
@@ -161,10 +178,7 @@ export default function Dashboard() {
                       {r.seniorEmail && (
                         <p className="opacity-90">
                           <span className="opacity-70">Email:</span>{" "}
-                          <a
-                            href={`mailto:${r.seniorEmail}`}
-                            className="underline"
-                          >
+                          <a href={`mailto:${r.seniorEmail}`} className="underline">
                             {r.seniorEmail}
                           </a>
                         </p>
@@ -183,17 +197,11 @@ export default function Dashboard() {
                           </a>
                         </p>
                       )}
-
-                      {!r.seniorEmail && !r.githubUrl && (
-                        <p className="opacity-70 text-xs">
-                          (Old request — contact info not stored)
-                        </p>
-                      )}
                     </div>
                   </div>
                 ) : (
                   <p className="mt-3 text-xs opacity-60">
-                    Contact details will appear after approval.
+                    Identity hidden • unlock after approval
                   </p>
                 )}
               </div>
@@ -201,7 +209,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ========================= INCOMING REQUESTS (SENIOR) ========================= */}
+        {/* ===================== INCOMING REQUESTS (SENIOR) ===================== */}
         <section>
           <h2 className="text-xl font-semibold mb-4">
             Requests To My Projects 👨‍💻

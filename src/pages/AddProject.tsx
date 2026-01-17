@@ -3,12 +3,20 @@ import { fetchGitHubStats, calculateVitalityScore } from "@/lib/github";
 import { addProject } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
+// ✅ Google AI
+import { generateGhostLog, generateThumbnailPrompt } from "@/lib/gemini";
+
+// ✅ Free image generator (Pollinations)
+import { generateThumbnailUrl } from "@/lib/thumbnail";
+
 export default function AddProject() {
   const { user, profile } = useAuth();
 
   const [githubUrl, setGithubUrl] = useState("");
   const [title, setTitle] = useState("");
   const [ghostLog, setGhostLog] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [message, setMessage] = useState("");
@@ -16,20 +24,60 @@ export default function AddProject() {
   const handleFetch = async () => {
     setMessage("");
     setStats(null);
+    setThumbnailUrl("");
     setLoading(true);
 
     const data = await fetchGitHubStats(githubUrl);
 
     if (!data) {
-      setMessage("Could not fetch repo — check URL.");
+      setMessage("❌ Could not fetch repo — check URL.");
       setLoading(false);
       return;
     }
 
     const vitality = calculateVitalityScore(data);
     setStats({ ...data, vitality });
-
     setLoading(false);
+
+    // Autofill title (optional)
+    if (!title) {
+      setTitle(data.name || "");
+    }
+
+    // ✅ Generate ghost log + thumbnail
+    try {
+      setLoading(true);
+      setMessage("⚡ Generating Ghost Log + Thumbnail using Google Gemini...");
+
+      const generatedLog = await generateGhostLog(
+        data.name || title || "Unknown Project",
+        data.description || "",
+        {
+          stars: data.stars ?? 0,
+          forks: data.forks ?? 0,
+          lastUpdated: data.lastUpdated ?? "",
+        }
+      );
+
+      setGhostLog(generatedLog);
+
+      // ✅ Gemini generates the image prompt
+      const prompt = await generateThumbnailPrompt(
+        data.name || title || "Ghost Project",
+        generatedLog
+      );
+
+      // ✅ Free image URL generated from prompt
+      const imgUrl = generateThumbnailUrl(prompt);
+      setThumbnailUrl(imgUrl);
+
+      setMessage("✅ Repo analyzed. Ghost Log + Thumbnail ready.");
+    } catch (err) {
+      console.error(err);
+      setMessage("⚠️ Repo fetched, but AI generation failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -60,9 +108,14 @@ export default function AddProject() {
         creatorName: profile.ghostHandle,
 
         // ✅ keep real email for approval + contact unlock later
-        creatorEmail: user.email || "",
+        creatorEmail: (user.email || "").toLowerCase(),
+
+        // ✅ ownership for security rules
+        creatorUid: user.uid,
 
         ghostLog,
+        thumbnailUrl, // ✅ NEW (AI thumbnail)
+
         vitalityScore: stats.vitality,
         status: "active",
 
@@ -75,6 +128,7 @@ export default function AddProject() {
       setGithubUrl("");
       setTitle("");
       setGhostLog("");
+      setThumbnailUrl("");
       setStats(null);
     } catch (err) {
       console.error(err);
@@ -88,7 +142,7 @@ export default function AddProject() {
     <div className="max-w-2xl mx-auto py-6 space-y-4">
       <h1 className="text-xl font-bold">Add Project</h1>
 
-      {message && <p>{message}</p>}
+      {message && <p className="text-sm opacity-80">{message}</p>}
 
       <input
         className="w-full border p-2"
@@ -97,12 +151,16 @@ export default function AddProject() {
         onChange={(e) => setGithubUrl(e.target.value)}
       />
 
-      <button onClick={handleFetch} className="border px-4 py-2">
-        {loading ? "Fetching..." : "Fetch Repo Data"}
+      <button
+        onClick={handleFetch}
+        className="border px-4 py-2 w-full"
+        disabled={loading}
+      >
+        {loading ? "Working..." : "Fetch Repo + Generate AI Ghost Log"}
       </button>
 
       {stats && (
-        <div className="border p-3 space-y-2">
+        <div className="border p-3 space-y-2 rounded">
           <p>
             <strong>Name:</strong> {stats.name}
           </p>
@@ -115,6 +173,18 @@ export default function AddProject() {
         </div>
       )}
 
+      {/* ✅ Thumbnail preview */}
+      {thumbnailUrl && (
+        <div className="border p-3 rounded space-y-2">
+          <p className="text-sm font-semibold">AI Thumbnail Preview</p>
+          <img
+            src={thumbnailUrl}
+            alt="AI Thumbnail"
+            className="w-full h-48 object-cover rounded"
+          />
+        </div>
+      )}
+
       <input
         className="w-full border p-2"
         placeholder="Project Title"
@@ -124,12 +194,17 @@ export default function AddProject() {
 
       <textarea
         className="w-full border p-2"
-        placeholder="Why is this abandoned?"
+        placeholder="Ghost Log (auto-generated by Gemini, editable)"
+        rows={4}
         value={ghostLog}
         onChange={(e) => setGhostLog(e.target.value)}
       />
 
-      <button onClick={handleSubmit} className="border px-4 py-2">
+      <button
+        onClick={handleSubmit}
+        className="border px-4 py-2 w-full"
+        disabled={loading}
+      >
         {loading ? "Submitting..." : "Submit to Vault"}
       </button>
     </div>

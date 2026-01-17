@@ -52,24 +52,37 @@ export const subscribeToAuth = (callback: (user: User | null) => void) =>
 
 export interface Project {
   id?: string;
+
   title: string;
   githubUrl: string;
+
+  // ✅ public identity (ghost handle)
   creatorName: string;
+
+  // ✅ real identity (email) — should be hidden in UI
   creatorEmail: string;
+
+  // ✅ ownership (for security rules)
+  creatorUid?: string;
+
   ghostLog: string;
+
+  // ✅ AI Thumbnail URL (Pollinations based)
+  thumbnailUrl?: string;
+
   vitalityScore: number;
   status: "active" | "dormant" | "haunted";
+
   stars?: number;
   forks?: number;
   lastUpdated?: string;
+
   createdAt?: Timestamp;
 }
 
 // ---------- FIRESTORE HELPERS ----------
 
-export const addProject = async (
-  project: Omit<Project, "id" | "createdAt">
-) => {
+export const addProject = async (project: Omit<Project, "id" | "createdAt">) => {
   const docRef = await addDoc(collection(db, "projects"), {
     ...project,
     createdAt: Timestamp.now(),
@@ -81,15 +94,13 @@ export const addProject = async (
 export const getProjects = async (): Promise<Project[]> => {
   const snapshot = await getDocs(collection(db, "projects"));
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
+  return snapshot.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
   })) as Project[];
 };
 
-export const getProjectById = async (
-  id: string
-): Promise<Project | null> => {
+export const getProjectById = async (id: string): Promise<Project | null> => {
   const ref = doc(db, "projects", id);
   const snap = await getDoc(ref);
 
