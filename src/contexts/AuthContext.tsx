@@ -10,6 +10,7 @@ interface UserProfile {
   email: string;
   name: string;
   ghostHandle: string;
+  linkedInUsername?: string; // Optional LinkedIn username
   createdAt: any;
 }
 

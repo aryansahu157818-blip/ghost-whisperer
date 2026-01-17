@@ -1,10 +1,20 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function Profile() {
   const { user, profile } = useAuth();
+  
+  const [linkedInUsername, setLinkedInUsername] = useState(profile?.linkedInUsername || "");
+  const [isEditing, setIsEditing] = useState(false);
+  
+  useEffect(() => {
+    setLinkedInUsername(profile?.linkedInUsername || "");
+  }, [profile]);
 
   const ghostHandle =
     profile?.ghostHandle ||
@@ -16,6 +26,23 @@ export default function Profile() {
       toast.success("Ghost username copied ✅");
     } catch {
       toast.error("Copy failed");
+    }
+  };
+  
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, {
+        linkedInUsername: linkedInUsername.trim() || null
+      });
+      
+      toast.success("Profile updated successfully ✅");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
     }
   };
 
@@ -49,6 +76,51 @@ export default function Profile() {
             <div>
               <p className="text-sm opacity-70 mb-1">Real Email (Private)</p>
               <p className="text-sm">{user?.email}</p>
+            </div>
+            
+            {/* LinkedIn Username */}
+            <div>
+              <p className="text-sm opacity-70 mb-1">LinkedIn Username</p>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={linkedInUsername}
+                    onChange={(e) => setLinkedInUsername(e.target.value)}
+                    placeholder="your-linkedin-username"
+                    className="w-full cyber-input"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="cyber-button text-sm px-3 py-2"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLinkedInUsername(profile?.linkedInUsername || "");
+                        setIsEditing(false);
+                      }}
+                      className="cyber-button text-sm px-3 py-2 bg-secondary text-foreground"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3 p-3 rounded border border-border bg-sidebar-accent">
+                  <span className="font-semibold">
+                    {profile?.linkedInUsername ? `@${profile.linkedInUsername}` : "Not set"}
+                  </span>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="cyber-button px-3 py-2 text-sm"
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="p-3 rounded border border-primary/30 bg-primary/10 text-sm">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { db } from "@/lib/firebase";
+import { db, getInterestRequestsByProject, InterestRequest } from "@/lib/firebase";
 import { Layout } from "@/components/Layout";
 
 import {
@@ -11,16 +11,19 @@ import {
   updateDoc,
   doc,
   serverTimestamp,
+  collection,
+  getDocs,
 } from "firebase/firestore";
 
 interface Interest {
   id: string;
   projectId: string;
-  projectTitle: string;
+  projectName: string; // Updated to match InterestRequest
 
-  juniorUid?: string;
-  juniorName?: string;
-  juniorEmail?: string;
+  requesterId?: string; // Updated to match InterestRequest
+  requesterName?: string; // Updated to match InterestRequest
+  requesterEmail?: string; // Updated to match InterestRequest
+  requesterLinkedIn?: string; // Updated to match InterestRequest
 
   // senior info
   seniorEmail?: string;
@@ -47,48 +50,56 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
 
-    let loaded = { sent: false, received: false };
     setLoading(true);
 
-    // 👨‍🎓 requests I SENT (junior)
+    // 👨‍🎓 requests I SENT (junior) - fetch from requests collection
     const sent = query(
-      collectionGroup(db, "interests"),
-      where("juniorUid", "==", user.uid)
+      collection(db, "requests"),
+      where("requesterId", "==", user.uid)
     );
 
     const unsub1 = onSnapshot(
       sent,
-      (snap) => {
-        setMyRequests(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
-        loaded.sent = true;
-        if (loaded.sent && loaded.received) setLoading(false);
+      async (snap) => {
+        const myRequestsData = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        setMyRequests(myRequestsData);
       },
       (err) => {
-        console.error("Sent interests listener error:", err);
-        loaded.sent = true;
-        if (loaded.sent && loaded.received) setLoading(false);
+        console.error("Sent requests listener error:", err);
       }
     );
 
-    // 👨‍💻 requests to MY projects (senior)
-    const incoming = query(
-      collectionGroup(db, "interests"),
-      where("seniorEmail", "==", user.email?.toLowerCase())
+    // 👨‍💻 requests to MY projects (senior) - first get my projects, then requests for those projects
+    const projectsQuery = query(
+      collection(db, "projects"),
+      where("creatorEmail", "==", user.email?.toLowerCase())
     );
 
     const unsub2 = onSnapshot(
-      incoming,
-      (snap) => {
-        setIncomingRequests(
-          snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
+      projectsQuery,
+      async (projectsSnap) => {
+        const projectIds = projectsSnap.docs.map(doc => doc.id);
+        
+        if (projectIds.length === 0) {
+          setIncomingRequests([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Get all requests for my projects
+        const requestsQuery = query(
+          collection(db, "requests"),
+          where("projectId", "in", projectIds)
         );
-        loaded.received = true;
-        if (loaded.sent && loaded.received) setLoading(false);
+        
+        const requestsSnap = await getDocs(requestsQuery);
+        const incomingRequestsData = requestsSnap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        setIncomingRequests(incomingRequestsData);
+        setLoading(false);
       },
       (err) => {
-        console.error("Incoming interests listener error:", err);
-        loaded.received = true;
-        if (loaded.sent && loaded.received) setLoading(false);
+        console.error("My projects listener error:", err);
+        setLoading(false);
       }
     );
 
@@ -99,20 +110,15 @@ export default function Dashboard() {
   }, [user]);
 
   const handleDecision = async (
-    projectId: string,
-    interestId: string,
+    _projectId: string, // not needed anymore with new structure
+    requestId: string,
     status: "approved" | "rejected"
   ) => {
-    const ref = doc(db, "projects", projectId, "interests", interestId);
+    const ref = doc(db, "requests", requestId);
 
     await updateDoc(ref, {
       status,
       decidedAt: serverTimestamp(),
-
-      // 🔓 only unlock after approval
-      ...(status === "approved"
-        ? { contactUnlocked: true, unlockedAt: serverTimestamp() }
-        : { contactUnlocked: false }),
     });
   };
 
@@ -147,7 +153,7 @@ export default function Dashboard() {
               <div key={r.id} className="cyber-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{r.projectTitle}</p>
+                    <p className="font-semibold">{r.projectName}</p>
                     <p className="text-sm opacity-70 mt-1">{r.message}</p>
                   </div>
 
@@ -225,11 +231,25 @@ export default function Dashboard() {
             {incomingRequests.map((r) => (
               <div key={r.id} className="cyber-card p-4 flex justify-between">
                 <div>
-                  <p className="font-semibold">{r.projectTitle}</p>
+                  <p className="font-semibold">{r.projectName}</p>
 
                   <p className="text-sm mt-1">
-                    {r.juniorName} — {r.juniorEmail}
+                    {r.requesterName} — {r.requesterEmail}
                   </p>
+                  
+                  {/* LinkedIn Profile */}
+                  {r.requesterLinkedIn && (
+                    <p className="text-sm mt-1">
+                      <a 
+                        href={`https://www.linkedin.com/in/${r.requesterLinkedIn}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 underline"
+                      >
+                        LinkedIn: {r.requesterLinkedIn}
+                      </a>
+                    </p>
+                  )}
 
                   <p className="opacity-70 text-sm mt-1">{r.message}</p>
 
@@ -244,7 +264,7 @@ export default function Dashboard() {
 
                 <div className="space-x-2">
                   <button
-                    onClick={() => handleDecision(r.projectId, r.id, "approved")}
+                    onClick={() => handleDecision('', r.id, "approved")}
                     disabled={r.status === "approved"}
                     className="cyber-button px-3 py-1 disabled:opacity-40"
                   >
@@ -252,7 +272,7 @@ export default function Dashboard() {
                   </button>
 
                   <button
-                    onClick={() => handleDecision(r.projectId, r.id, "rejected")}
+                    onClick={() => handleDecision('', r.id, "rejected")}
                     disabled={r.status === "rejected"}
                     className="cyber-button px-3 py-1 disabled:opacity-40"
                   >

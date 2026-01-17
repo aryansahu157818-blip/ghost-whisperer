@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { Github, Star, GitFork, Calendar, Activity, Shield, FileText } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
-import { getProjectById, Project } from "@/lib/firebase";
+import { getProjectById, Project, sendInterestRequest } from "@/lib/firebase";
 import ReactMarkdown from "react-markdown";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +59,31 @@ export default function ProjectDetails() {
     );
   }
 
+  const [interestMessage, setInterestMessage] = useState('');
+  
+  const handleInterestRequest = async () => {
+    if (!user || !profile || !project) return;
+    
+    try {
+      // Send interest request to Firestore
+      await sendInterestRequest({
+        projectId: project.id!,
+        projectName: project.title,
+        requesterId: user.uid,
+        requesterName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+        requesterEmail: user.email!,
+        requesterLinkedIn: profile.linkedInUsername || undefined,
+        message: interestMessage,
+      });
+      
+      alert('Interest request sent successfully!');
+      setInterestMessage(''); // Clear the message
+    } catch (error) {
+      console.error('Error sending interest request:', error);
+      alert('Failed to send interest request');
+    }
+  };
+  
   return (
     <Layout>
       <div className="min-h-screen p-8">
@@ -206,17 +231,33 @@ export default function ProjectDetails() {
                 </div>
                 
                 <div>
+                  <label className="block text-sm text-muted-foreground mb-2">LinkedIn Profile</label>
+                  <input
+                    value={profile?.linkedInUsername || ""}
+                    disabled
+                    className="cyber-input w-full opacity-70"
+                    placeholder="Not provided"
+                  />
+                </div>
+                
+                <div>
                   <label className="block text-sm text-muted-foreground mb-2">
                     Why are you interested in this project?
                   </label>
                   <textarea
+                    id="interest-message"
                     rows={4}
                     className="cyber-input w-full"
                     placeholder="Explain your interest in reviving this project..."
+                    value={interestMessage}
+                    onChange={(e) => setInterestMessage(e.target.value)}
                   />
                 </div>
                 
-                <button className="cyber-button w-full">
+                <button 
+                  onClick={handleInterestRequest}
+                  className="cyber-button w-full"
+                >
                   Send Interest Request
                 </button>
               </div>
