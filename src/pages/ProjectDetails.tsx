@@ -16,7 +16,7 @@ export default function ProjectDetails() {
 
   useEffect(() => {
     if (!id) return;
-
+  
     const fetchProject = async () => {
       try {
         setLoading(true);
@@ -30,10 +30,35 @@ export default function ProjectDetails() {
         setLoading(false);
       }
     };
-
+  
     fetchProject();
   }, [id]);
-
+  
+  const [interestMessage, setInterestMessage] = useState('');
+    
+  const handleInterestRequest = async () => {
+    if (!user || !profile || !project) return;
+      
+    try {
+      // Send interest request to Firestore
+      await sendInterestRequest({
+        projectId: project.id!,
+        projectName: project.title,
+        requesterId: user.uid,
+        requesterName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+        requesterEmail: user.email!,
+        requesterLinkedIn: profile.linkedInUsername || undefined,
+        message: interestMessage,
+      });
+        
+      alert('Interest request sent successfully!');
+      setInterestMessage(''); // Clear the message
+    } catch (error) {
+      console.error('Error sending interest request:', error);
+      alert('Failed to send interest request');
+    }
+  };
+  
   if (loading) {
     return (
       <Layout>
@@ -46,7 +71,7 @@ export default function ProjectDetails() {
       </Layout>
     );
   }
-
+  
   if (error || !project) {
     return (
       <Layout>
@@ -58,31 +83,6 @@ export default function ProjectDetails() {
       </Layout>
     );
   }
-
-  const [interestMessage, setInterestMessage] = useState('');
-  
-  const handleInterestRequest = async () => {
-    if (!user || !profile || !project) return;
-    
-    try {
-      // Send interest request to Firestore
-      await sendInterestRequest({
-        projectId: project.id!,
-        projectName: project.title,
-        requesterId: user.uid,
-        requesterName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
-        requesterEmail: user.email!,
-        requesterLinkedIn: profile.linkedInUsername || undefined,
-        message: interestMessage,
-      });
-      
-      alert('Interest request sent successfully!');
-      setInterestMessage(''); // Clear the message
-    } catch (error) {
-      console.error('Error sending interest request:', error);
-      alert('Failed to send interest request');
-    }
-  };
   
   return (
     <Layout>
@@ -197,7 +197,7 @@ export default function ProjectDetails() {
               
               <div className="prose prose-invert max-w-none bg-secondary/20 p-6 rounded-lg markdown-content">
                 <ReactMarkdown>
-                  {project.ghostLog}
+                  {project.ghostLog || ""}
                 </ReactMarkdown>
               </div>
             </div>
