@@ -11,6 +11,7 @@ interface UserProfile {
   name: string;
   ghostHandle: string;
   linkedInUsername?: string; // Optional LinkedIn username
+  githubProfileUrl?: string; // Optional GitHub profile URL
   createdAt: any;
 }
 

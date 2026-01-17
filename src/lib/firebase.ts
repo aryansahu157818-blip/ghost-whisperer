@@ -121,6 +121,7 @@ export interface InterestRequest {
   requesterName: string;
   requesterEmail: string;
   requesterLinkedIn?: string;
+  requesterGithub?: string;
   message: string;
   createdAt: Timestamp;
   status: 'pending' | 'approved' | 'rejected';

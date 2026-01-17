@@ -15,6 +15,8 @@ import {
   getDocs,
 } from "firebase/firestore";
 
+import { Github, Link as LinkIcon } from "lucide-react";
+
 interface Interest {
   id: string;
   projectId: string;
@@ -24,6 +26,7 @@ interface Interest {
   requesterName?: string; // Updated to match InterestRequest
   requesterEmail?: string; // Updated to match InterestRequest
   requesterLinkedIn?: string; // Updated to match InterestRequest
+  requesterGithub?: string; // Updated to match InterestRequest
 
   // senior info
   seniorEmail?: string;
@@ -234,19 +237,35 @@ export default function Dashboard() {
                   <p className="font-semibold">{r.projectName}</p>
 
                   <p className="text-sm mt-1">
-                    {r.requesterName} — {r.requesterEmail}
+                    {r.requesterName}
                   </p>
                   
                   {/* LinkedIn Profile */}
                   {r.requesterLinkedIn && (
-                    <p className="text-sm mt-1">
+                    <p className="text-sm mt-1 flex items-center gap-1">
+                      <LinkIcon className="w-4 h-4 text-primary" />
                       <a 
                         href={`https://www.linkedin.com/in/${r.requesterLinkedIn}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 underline"
+                        className="text-primary hover:text-primary/80 underline neon-text"
                       >
-                        LinkedIn: {r.requesterLinkedIn}
+                        LinkedIn Profile
+                      </a>
+                    </p>
+                  )}
+                  
+                  {/* GitHub Profile */}
+                  {r.requesterGithub && (
+                    <p className="text-sm mt-1 flex items-center gap-1">
+                      <Github className="w-4 h-4 text-primary" />
+                      <a 
+                        href={r.requesterGithub} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 underline neon-text"
+                      >
+                        GitHub Profile
                       </a>
                     </p>
                   )}

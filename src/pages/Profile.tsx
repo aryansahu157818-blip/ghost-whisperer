@@ -3,17 +3,19 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function Profile() {
   const { user, profile } = useAuth();
   
   const [linkedInUsername, setLinkedInUsername] = useState(profile?.linkedInUsername || "");
+  const [githubProfileUrl, setGithubProfileUrl] = useState(profile?.githubProfileUrl || "");
   const [isEditing, setIsEditing] = useState(false);
   
   useEffect(() => {
     setLinkedInUsername(profile?.linkedInUsername || "");
+    setGithubProfileUrl(profile?.githubProfileUrl || "");
   }, [profile]);
 
   const ghostHandle =
@@ -35,7 +37,8 @@ export default function Profile() {
     try {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
-        linkedInUsername: linkedInUsername.trim() || null
+        linkedInUsername: linkedInUsername.trim() || null,
+        githubProfileUrl: githubProfileUrl.trim() || null
       });
       
       toast.success("Profile updated successfully ✅");
@@ -100,6 +103,7 @@ export default function Profile() {
                     <button
                       onClick={() => {
                         setLinkedInUsername(profile?.linkedInUsername || "");
+                        setGithubProfileUrl(profile?.githubProfileUrl || "");
                         setIsEditing(false);
                       }}
                       className="cyber-button text-sm px-3 py-2 bg-secondary text-foreground"
@@ -112,6 +116,34 @@ export default function Profile() {
                 <div className="flex items-center justify-between gap-3 p-3 rounded border border-border bg-sidebar-accent">
                   <span className="font-semibold">
                     {profile?.linkedInUsername ? `@${profile.linkedInUsername}` : "Not set"}
+                  </span>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="cyber-button px-3 py-2 text-sm"
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* GitHub Profile URL */}
+            <div>
+              <p className="text-sm opacity-70 mb-1">GitHub Profile URL</p>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={githubProfileUrl}
+                    onChange={(e) => setGithubProfileUrl(e.target.value)}
+                    placeholder="https://github.com/username"
+                    className="w-full cyber-input"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3 p-3 rounded border border-border bg-sidebar-accent">
+                  <span className="font-semibold">
+                    {profile?.githubProfileUrl ? "Set" : "Not set"}
                   </span>
                   <button
                     onClick={() => setIsEditing(true)}

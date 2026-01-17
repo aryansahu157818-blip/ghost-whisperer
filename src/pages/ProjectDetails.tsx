@@ -48,6 +48,7 @@ export default function ProjectDetails() {
         requesterName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
         requesterEmail: user.email!,
         requesterLinkedIn: profile.linkedInUsername || undefined,
+        requesterGithub: profile.githubProfileUrl || undefined,
         message: interestMessage,
       });
         
@@ -221,19 +222,22 @@ export default function ProjectDetails() {
                   />
                 </div>
                 
-                <div>
-                  <label className="block text-sm text-muted-foreground mb-2">Your Email</label>
-                  <input
-                    value={user.email || ""}
-                    disabled
-                    className="cyber-input w-full opacity-70"
-                  />
-                </div>
+
                 
                 <div>
                   <label className="block text-sm text-muted-foreground mb-2">LinkedIn Profile</label>
                   <input
                     value={profile?.linkedInUsername || ""}
+                    disabled
+                    className="cyber-input w-full opacity-70"
+                    placeholder="Not provided"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">GitHub Profile</label>
+                  <input
+                    value={profile?.githubProfileUrl || ""}
                     disabled
                     className="cyber-input w-full opacity-70"
                     placeholder="Not provided"
